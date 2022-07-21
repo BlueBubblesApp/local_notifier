@@ -184,13 +184,18 @@ void LocalNotifierPlugin::Notify(
       std::get<std::string>(args.at(flutter::EncodableValue("title")));
   std::string body =
       std::get<std::string>(args.at(flutter::EncodableValue("body")));
+  std::string imagePath =
+      std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
 
   flutter::EncodableList actions = std::get<flutter::EncodableList>(
       args.at(flutter::EncodableValue("actions")));
 
-  WinToastTemplate toast = WinToastTemplate(WinToastTemplate::Text02);
-  toast.setTextField(converter.from_bytes(title), WinToastTemplate::FirstLine);
-  toast.setTextField(converter.from_bytes(body), WinToastTemplate::SecondLine);
+  WinToastTemplate toast = WinToastTemplate(WinToastTemplate::ImageAndText02);
+  toast.setFirstLine(converter.from_bytes(title));
+  toast.setSecondLine(converter.from_bytes(body));
+  if (imagePath.size() != 0) {
+    toast.setImagePath(converter.from_bytes(imagePath));
+  }
 
   for (flutter::EncodableValue action_value : actions) {
     flutter::EncodableMap action_map =
