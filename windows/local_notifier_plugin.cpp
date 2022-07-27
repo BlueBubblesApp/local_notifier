@@ -206,6 +206,8 @@ void LocalNotifierPlugin::Notify(
     toast.addAction(converter.from_bytes(action_text));
   }
 
+  toast.setDuration(WinToastTemplate::Duration::Short);
+
   CustomToastHandler* handler = new CustomToastHandler(identifier);
   INT64 toast_id = WinToast::instance()->showToast(toast, handler);
 
