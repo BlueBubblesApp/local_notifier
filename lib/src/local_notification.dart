@@ -12,13 +12,16 @@ class LocalNotification with LocalNotificationListener {
   /// Representing the title of the notification.
   String title;
 
-  /// Representing the subtitle of the notification.
+  /// Representing the subtitle of the notification (MacOS only).
   String? subtitle;
 
   /// Representing the body of the notification.
   String? body;
 
-  /// Representing whether the notification is silent.
+  /// Representing the image path of the notification (Windows only).
+  String? imagePath;
+
+  /// Representing whether the notification is silent (Windows only).
   bool silent;
 
   /// Representing the actions of the notification.
@@ -34,6 +37,7 @@ class LocalNotification with LocalNotificationListener {
     required this.title,
     this.subtitle,
     this.body,
+    this.imagePath,
     this.silent = false,
     this.actions,
   }) {
@@ -57,6 +61,7 @@ class LocalNotification with LocalNotificationListener {
       title: json['title'],
       subtitle: json['subtitle'],
       body: json['body'],
+      imagePath: json['imagePath'],
       silent: json['silent'],
       actions: actions,
     );
@@ -68,6 +73,7 @@ class LocalNotification with LocalNotificationListener {
       'title': title,
       'subtitle': subtitle ?? '',
       'body': body ?? '',
+      'imagePath': imagePath ?? '',
       'silent': silent,
       'actions': (actions ?? []).map((e) => e.toJson()).toList(),
     }..removeWhere((key, value) => value == null);

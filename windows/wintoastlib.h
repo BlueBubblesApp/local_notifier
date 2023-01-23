@@ -213,6 +213,7 @@ namespace WinToastLib {
     protected:
         bool                                            _isInitialized{false};
         bool                                            _hasCoInitialized{false};
+        bool                                            _hasIdentity{true};
         ShortcutPolicy                                  _shortcutPolicy{SHORTCUT_POLICY_REQUIRE_CREATE};
         std::wstring                                    _appName{};
         std::wstring                                    _aumi{};

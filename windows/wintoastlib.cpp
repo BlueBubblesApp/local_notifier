@@ -19,10 +19,12 @@
  */
 
 #include "wintoastlib.h"
+#include <VersionHelpers.h>
 #include <memory>
 #include <assert.h>
 #include <unordered_map>
 #include <array>
+#include <appmodel.h>
 
 #pragma comment(lib,"shlwapi")
 #pragma comment(lib,"user32")
@@ -479,6 +481,38 @@ enum WinToast::ShortcutResult WinToast::createShortcut() {
     return SUCCEEDED(hr) ? SHORTCUT_WAS_CREATED : SHORTCUT_CREATE_FAILED;
 }
 
+bool hasIdentity() {
+  UINT32 length = 0;
+  LONG rc = GetCurrentPackageFullName(&length, NULL);
+  if (rc != ERROR_INSUFFICIENT_BUFFER)
+  {
+    if (rc == APPMODEL_ERROR_NO_PACKAGE)
+      DEBUG_MSG(L"Process has no package identity\n");
+    else
+      DEBUG_MSG(L"Error " << rc << L" in GetCurrentPackageFullName\n");
+    return false;
+  }
+
+  PWSTR fullName = (PWSTR) malloc(length * sizeof(*fullName));
+  if (fullName == NULL)
+  {
+    DEBUG_MSG(L"Error allocating memory\n");
+    return false;
+  }
+
+  rc = GetCurrentPackageFullName(&length, fullName);
+  if (rc != ERROR_SUCCESS)
+  {
+    DEBUG_MSG(L"Error " << rc << L" retrieving PackageFullName\n");
+    return false;
+  }
+  DEBUG_MSG(fullName << L"\n");
+
+  free(fullName);
+
+  return true;
+}
+
 bool WinToast::initialize(_Out_opt_ WinToastError* error) {
     _isInitialized = false;
     setError(error, WinToastError::NoError);
@@ -509,6 +543,8 @@ bool WinToast::initialize(_Out_opt_ WinToastError* error) {
         DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
         return false;
     }
+
+    _hasIdentity = hasIdentity();
 
     _isInitialized = true;
     return _isInitialized;
@@ -654,7 +690,11 @@ INT64 WinToast::showToast(_In_ const WinToastTemplate& toast, _In_  IWinToastHan
     HRESULT hr = DllImporter::Wrap_GetActivationFactory(WinToastStringWrapper(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(), &notificationManager);
     if (SUCCEEDED(hr)) {
         ComPtr<IToastNotifier> notifier;
-        hr = notificationManager->CreateToastNotifierWithId(WinToastStringWrapper(_aumi).Get(), &notifier);
+        if (_hasIdentity) {
+          hr = notificationManager->CreateToastNotifier(&notifier);
+        } else {
+          hr = notificationManager->CreateToastNotifierWithId(WinToastStringWrapper(_aumi).Get(), &notifier);
+        }
         if (SUCCEEDED(hr)) {
             ComPtr<IToastNotificationFactory> notificationFactory;
             hr = DllImporter::Wrap_GetActivationFactory(WinToastStringWrapper(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(), &notificationFactory);
@@ -748,7 +788,11 @@ ComPtr<IToastNotifier> WinToast::notifier(_In_ bool* succeded) const  {
 	ComPtr<IToastNotifier> notifier;
 	HRESULT hr = DllImporter::Wrap_GetActivationFactory(WinToastStringWrapper(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(), &notificationManager);
 	if (SUCCEEDED(hr)) {
-		hr = notificationManager->CreateToastNotifierWithId(WinToastStringWrapper(_aumi).Get(), &notifier);
+          if (_hasIdentity) {
+            hr = notificationManager->CreateToastNotifier(&notifier);
+          } else {
+            hr = notificationManager->CreateToastNotifierWithId(WinToastStringWrapper(_aumi).Get(), &notifier);
+          }
 	}
 	*succeded = SUCCEEDED(hr);
 	return notifier;
