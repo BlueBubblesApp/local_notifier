@@ -206,7 +206,16 @@ void LocalNotifierPlugin::Notify(
     toast.addAction(converter.from_bytes(action_text));
   }
 
-  toast.setDuration(WinToastTemplate::Duration::System);
+  std::string duration =
+      std::get<std::string>(args.at(flutter::EncodableValue("duration")));
+
+  if (duration == "LocalNotificationDuration.short") {
+    toast.setDuration(WinToastTemplate::Duration::Short);
+  } else if (duration == "LocalNotificationDuration.long") {
+    toast.setDuration(WinToastTemplate::Duration::Long);
+  } else {
+    toast.setDuration(WinToastTemplate::Duration::System);
+  }
 
   CustomToastHandler* handler = new CustomToastHandler(identifier);
   INT64 toast_id = WinToast::instance()->showToast(toast, handler);

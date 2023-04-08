@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage> with TrayListener {
     identifier: '_exampleNotification',
     title: "example",
     body: "hello flutter!",
+    duration: LocalNotificationDuration.short,
     actions: [
       LocalNotificationAction(
         text: 'Yes',

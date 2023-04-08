@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import 'local_notification_action.dart';
 import 'local_notification_close_reason.dart';
+import 'local_notification_duration.dart';
 import 'local_notification_listener.dart';
 import 'local_notifier.dart';
 
@@ -24,6 +25,9 @@ class LocalNotification with LocalNotificationListener {
   /// Representing whether the notification is silent (Windows only).
   bool silent;
 
+  /// Representing the duration of the notification (Windows only).
+  LocalNotificationDuration duration;
+
   /// Representing the actions of the notification.
   List<LocalNotificationAction>? actions;
 
@@ -39,6 +43,7 @@ class LocalNotification with LocalNotificationListener {
     this.body,
     this.imagePath,
     this.silent = false,
+    this.duration = LocalNotificationDuration.system,
     this.actions,
   }) {
     if (identifier != null) {
@@ -63,6 +68,7 @@ class LocalNotification with LocalNotificationListener {
       body: json['body'],
       imagePath: json['imagePath'],
       silent: json['silent'],
+      duration: LocalNotificationDuration.values.firstWhere((e) => e.toString() == json['duration']),
       actions: actions,
     );
   }
@@ -75,6 +81,7 @@ class LocalNotification with LocalNotificationListener {
       'body': body ?? '',
       'imagePath': imagePath ?? '',
       'silent': silent,
+      'duration': duration.toString(),
       'actions': (actions ?? []).map((e) => e.toJson()).toList(),
     }..removeWhere((key, value) => value == null);
   }
