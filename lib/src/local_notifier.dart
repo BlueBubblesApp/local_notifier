@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-
-import 'local_notification_close_reason.dart';
-import 'local_notification_listener.dart';
-import 'local_notification.dart';
-import 'shortcut_policy.dart';
+import 'package:local_notifier/src/local_notification.dart';
+import 'package:local_notifier/src/local_notification_close_reason.dart';
+import 'package:local_notifier/src/local_notification_duration.dart';
+import 'package:local_notifier/src/local_notification_listener.dart';
+import 'package:local_notifier/src/shortcut_policy.dart';
 
 class LocalNotifier {
   LocalNotifier._() {
@@ -24,10 +24,10 @@ class LocalNotifier {
 
   bool _isInitialized = false;
   String? _appName;
-  Map<String, LocalNotification> _notifications = {};
+  final Map<String, LocalNotification> _notifications = {};
 
   Future<void> _methodCallHandler(MethodCall call) async {
-    String notificationId = call.arguments['notificationId'];
+    String notificationId = call.arguments['notificationId'] as String;
     LocalNotification? localNotification = _notifications[notificationId];
 
     for (final LocalNotificationListener listener in listeners) {
@@ -40,7 +40,7 @@ class LocalNotifier {
       } else if (call.method == 'onLocalNotificationClose') {
         LocalNotificationCloseReason closeReason =
             LocalNotificationCloseReason.values.firstWhere(
-          (e) => describeEnum(e) == call.arguments['closeReason'],
+          (e) => e.name == call.arguments['closeReason'],
           orElse: () => LocalNotificationCloseReason.unknown,
         );
         listener.onLocalNotificationClose(
@@ -50,7 +50,7 @@ class LocalNotifier {
       } else if (call.method == 'onLocalNotificationClick') {
         listener.onLocalNotificationClick(localNotification!);
       } else if (call.method == 'onLocalNotificationClickAction') {
-        int actionIndex = call.arguments['actionIndex'];
+        int actionIndex = call.arguments['actionIndex'] as int;
         listener.onLocalNotificationClickAction(
           localNotification!,
           actionIndex,
@@ -85,10 +85,10 @@ class LocalNotifier {
   }) async {
     final Map<String, dynamic> arguments = {
       'appName': appName,
-      'shortcutPolicy': describeEnum(shortcutPolicy),
+      'shortcutPolicy': shortcutPolicy.name,
     };
     if (Platform.isWindows) {
-      _isInitialized = await _channel.invokeMethod('setup', arguments);
+      _isInitialized = await _channel.invokeMethod('setup', arguments) as bool;
     } else {
       _isInitialized = true;
     }
