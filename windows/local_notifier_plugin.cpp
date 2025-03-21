@@ -44,6 +44,16 @@ class CustomToastHandler : public IWinToastHandler {
                           std::make_unique<flutter::EncodableValue>(args));
   }
 
+  void toastActivated(std::wstring response) const {
+    flutter::EncodableMap args = flutter::EncodableMap();
+    args[flutter::EncodableValue("notificationId")] =
+        flutter::EncodableValue(identifier);
+    args[flutter::EncodableValue("input")] = flutter::EncodableValue(
+        std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(response));
+    channel->InvokeMethod("onLocalNotificationInput",
+                          std::make_unique<flutter::EncodableValue>(args));
+  }
+
   void toastDismissed(WinToastDismissalReason state) const {
     std::string closeReason = "unknown";
 
@@ -180,21 +190,120 @@ void LocalNotifierPlugin::Notify(
 
   std::string identifier =
       std::get<std::string>(args.at(flutter::EncodableValue("identifier")));
+  std::string type =
+      std::get<std::string>(args.at(flutter::EncodableValue("type")));
   std::string title =
       std::get<std::string>(args.at(flutter::EncodableValue("title")));
   std::string body =
       std::get<std::string>(args.at(flutter::EncodableValue("body")));
+  std::string body2 =
+      std::get<std::string>(args.at(flutter::EncodableValue("body2")));
   std::string imagePath =
       std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
+  std::string systemSound =
+      std::get<std::string>(args.at(flutter::EncodableValue("systemSound")));
+  std::string soundOption =
+      std::get<std::string>(args.at(flutter::EncodableValue("soundOption")));
+  bool hasInput = std::get<bool>(args.at(flutter::EncodableValue("hasInput")));
+  std::string inputPlaceholder = std::get<std::string>(
+      args.at(flutter::EncodableValue("inputPlaceholder")));
+  std::string inputButtonText = std::get<std::string>(
+      args.at(flutter::EncodableValue("inputButtonText")));
 
   flutter::EncodableList actions = std::get<flutter::EncodableList>(
       args.at(flutter::EncodableValue("actions")));
 
-  WinToastTemplate toast = WinToastTemplate(WinToastTemplate::ImageAndText02);
+  WinToastTemplate::WinToastTemplateType templateType;
+  if (type == "LocalNotificationType.text01") {
+    templateType = WinToastTemplate::WinToastTemplateType::Text01;
+  } else if (type == "LocalNotificationType.text02") {
+    templateType = WinToastTemplate::WinToastTemplateType::Text02;
+  } else if (type == "LocalNotificationType.text03") {
+    templateType = WinToastTemplate::WinToastTemplateType::Text03;
+  } else if (type == "LocalNotificationType.text04") {
+    templateType = WinToastTemplate::WinToastTemplateType::Text04;
+  } else if (type == "LocalNotificationType.imageAndText01") {
+    templateType = WinToastTemplate::WinToastTemplateType::ImageAndText01;
+  } else if (type == "LocalNotificationType.imageAndText02") {
+    templateType = WinToastTemplate::WinToastTemplateType::ImageAndText02;
+  } else if (type == "LocalNotificationType.imageAndText03") {
+    templateType = WinToastTemplate::WinToastTemplateType::ImageAndText03;
+  } else {
+    templateType = WinToastTemplate::WinToastTemplateType::ImageAndText04;
+  }
+
+  WinToastTemplate toast = WinToastTemplate(templateType);
+
   toast.setFirstLine(converter.from_bytes(title));
-  toast.setSecondLine(converter.from_bytes(body));
+  if (body.size() != 0) {
+    toast.setSecondLine(converter.from_bytes(body));
+  }
+  if (body2.size() != 0) {
+    toast.setThirdLine(converter.from_bytes(body2));
+  }
   if (imagePath.size() != 0) {
     toast.setImagePath(converter.from_bytes(imagePath));
+  }
+  if (systemSound == "LocalNotificationSound.defaultSound") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::DefaultSound);
+  } else if (systemSound == "LocalNotificationSound.im") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::IM);
+  } else if (systemSound == "LocalNotificationSound.mail") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Mail);
+  } else if (systemSound == "LocalNotificationSound.reminder") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Reminder);
+  } else if (systemSound == "LocalNotificationSound.sms") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::SMS);
+  } else if (systemSound == "LocalNotificationSound.alarm") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm);
+  } else if (systemSound == "LocalNotificationSound.alarm2") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm2);
+  } else if (systemSound == "LocalNotificationSound.alarm3") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm3);
+  } else if (systemSound == "LocalNotificationSound.alarm4") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm4);
+  } else if (systemSound == "LocalNotificationSound.alarm5") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm5);
+  } else if (systemSound == "LocalNotificationSound.alarm6") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm6);
+  } else if (systemSound == "LocalNotificationSound.alarm7") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm7);
+  } else if (systemSound == "LocalNotificationSound.alarm8") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm8);
+  } else if (systemSound == "LocalNotificationSound.alarm9") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm9);
+  } else if (systemSound == "LocalNotificationSound.alarm10") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Alarm10);
+  } else if (systemSound == "LocalNotificationSound.call") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call);
+  } else if (systemSound == "LocalNotificationSound.call1") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call1);
+  } else if (systemSound == "LocalNotificationSound.call2") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call2);
+  } else if (systemSound == "LocalNotificationSound.call3") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call3);
+  } else if (systemSound == "LocalNotificationSound.call4") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call4);
+  } else if (systemSound == "LocalNotificationSound.call5") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call5);
+  } else if (systemSound == "LocalNotificationSound.call6") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call6);
+  } else if (systemSound == "LocalNotificationSound.call7") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call7);
+  } else if (systemSound == "LocalNotificationSound.call8") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call8);
+  } else if (systemSound == "LocalNotificationSound.call9") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call9);
+  } else if (systemSound == "LocalNotificationSound.call10") {
+    toast.setAudioPath(WinToastTemplate::AudioSystemFile::Call10);
+  }
+
+  if (soundOption == "LocalNotificationSoundOption.defaultOption") {
+    toast.setAudioOption(WinToastTemplate::AudioOption::Default);
+  } else if (soundOption == "LocalNotificationSoundOption.silent") {
+    toast.setAudioOption(WinToastTemplate::AudioOption::Silent);
+  } else if (soundOption == "LocalNotificationSoundOption.loop") {
+    toast.setAudioOption(WinToastTemplate::AudioOption::Loop);
   }
 
   for (flutter::EncodableValue action_value : actions) {
@@ -204,6 +313,16 @@ void LocalNotifierPlugin::Notify(
         std::get<std::string>(action_map.at(flutter::EncodableValue("text")));
 
     toast.addAction(converter.from_bytes(action_text));
+  }
+
+  if (hasInput) {
+    toast.addInput();
+
+    if (inputPlaceholder.size() != 0) {
+      toast.setInputPlaceholder(converter.from_bytes(inputPlaceholder));
+    }
+
+    toast.setInputButtonText(converter.from_bytes(inputButtonText));
   }
 
   std::string duration =

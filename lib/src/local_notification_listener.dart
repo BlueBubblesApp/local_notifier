@@ -12,4 +12,8 @@ abstract mixin class LocalNotificationListener {
     LocalNotification notification,
     int actionIndex,
   ) {}
+  void onLocalNotificationInput(
+    LocalNotification notification,
+    String input,
+  ) {}
 }

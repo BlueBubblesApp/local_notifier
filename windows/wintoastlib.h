@@ -138,6 +138,8 @@ namespace WinToastLib {
         void setScenario(_In_ Scenario scenario);
         void addAction(_In_ std::wstring const& label);
         void addInput();
+        void setInputPlaceholder(_In_ std::wstring const& placeholder);
+        void setInputButtonText(_In_ std::wstring const& buttonText);
 
         std::size_t textFieldsCount() const;
         std::size_t actionsCount() const;
@@ -158,10 +160,15 @@ namespace WinToastLib {
         bool isToastGeneric() const;
         bool isInlineHeroImage() const;
         bool isCropHintCircle() const;
-        bool isInput() const;
+        bool hasInput() const;
+        std::wstring const& inputPlaceholder() const;
+        bool hasInputButton() const;
+        std::wstring const& inputButtonText() const;
 
     private:
         bool _hasInput{false};
+        std::wstring _inputPlaceholder{};
+        std::wstring _inputButtonText{};
 
         std::vector<std::wstring> _textFields{};
         std::vector<std::wstring> _actions{};
@@ -308,7 +315,7 @@ namespace WinToastLib {
         HRESULT addActionHelper(_In_ IXmlDocument* xml, _In_ std::wstring const& action, _In_ std::wstring const& arguments);
         HRESULT addDurationHelper(_In_ IXmlDocument* xml, _In_ std::wstring const& duration);
         HRESULT addScenarioHelper(_In_ IXmlDocument* xml, _In_ std::wstring const& scenario);
-        HRESULT addInputHelper(_In_ IXmlDocument* xml);
+        HRESULT addInputHelper(_In_ IXmlDocument* xml, _In_ std::wstring const& inputPlaceholder, _In_ std::wstring const& inputButtonText);
         ComPtr<IToastNotifier> notifier(_In_ bool* succeded) const;
         void setError(_Out_opt_ WinToastError* error, _In_ WinToastError value);
     };

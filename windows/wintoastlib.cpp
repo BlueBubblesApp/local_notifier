@@ -754,6 +754,10 @@ INT64 WinToast::showToast(_In_ WinToastTemplate const& toast, _In_ IWinToastHand
                             hr = setAttributionTextFieldHelper(xmlDocument.Get(), toast.attributionText());
                         }
 
+                        if(SUCCEEDED(hr) && toast.hasInput()) {
+                            hr = addInputHelper(xmlDocument.Get(), toast.inputPlaceholder(), toast.inputButtonText());
+                        }
+
                         std::array<WCHAR, 12> buf;
                         for (std::size_t i = 0, actionsCount = toast.actionsCount(); i < actionsCount && SUCCEEDED(hr); i++) {
                             _snwprintf_s(buf.data(), buf.size(), _TRUNCATE, L"%zd", i);
@@ -769,10 +773,6 @@ INT64 WinToast::showToast(_In_ WinToastTemplate const& toast, _In_ IWinToastHand
                         if (SUCCEEDED(hr) && toast.duration() != WinToastTemplate::Duration::System) {
                             hr = addDurationHelper(xmlDocument.Get(),
                                                    (toast.duration() == WinToastTemplate::Duration::Short) ? L"short" : L"long");
-                        }
-
-                        if(SUCCEEDED(hr) && toast.isInput()) {
-                            hr = addInputHelper(xmlDocument.Get());
                         }
 
                         if (SUCCEEDED(hr)) {
@@ -803,7 +803,7 @@ INT64 WinToast::showToast(_In_ WinToastTemplate const& toast, _In_ IWinToastHand
                                     hr         = notification->put_ExpirationTime(&expirationDateTime);
                                 }
 
-                                EventRegistrationToken activatedToken, dismissedToken, failedToken;
+                                EventRegistrationToken activatedToken = {}, dismissedToken = {}, failedToken = {};
 
                                 GUID guid;
                                 HRESULT hrGuid = CoCreateGuid(&guid);
@@ -994,21 +994,15 @@ HRESULT WinToast::addScenarioHelper(_In_ IXmlDocument* xml, _In_ std::wstring co
     return hr;
 }
 
-HRESULT WinToast::addInputHelper(_In_ IXmlDocument* xml)
-{
+HRESULT WinToast::addInputHelper(_In_ IXmlDocument* xml, _In_ std::wstring const& inputPlaceholder, _In_ std::wstring const& inputButtonText) {
     std::vector<std::wstring> attrbs;
     attrbs.push_back(L"id");
     attrbs.push_back(L"type");
     attrbs.push_back(L"placeHolderContent");
 
-    std::vector<std::wstring> attrbs2;
-    attrbs2.push_back(L"content");
-    attrbs2.push_back(L"arguments");
-
     Util::createElement(xml, L"toast", L"actions", {});
 
     Util::createElement(xml, L"actions", L"input",attrbs);
-    Util::createElement(xml, L"actions", L"action",attrbs2);
 
     ComPtr<IXmlNodeList> nodeList;
     HRESULT hr = xml->GetElementsByTagName(WinToastStringWrapper(L"input").Get(), &nodeList);
@@ -1023,25 +1017,33 @@ HRESULT WinToast::addInputHelper(_In_ IXmlDocument* xml)
             if(SUCCEEDED(hr)){
                 toastElement->SetAttribute(WinToastStringWrapper(L"id").Get(), WinToastStringWrapper(L"textBox").Get());
                 toastElement->SetAttribute(WinToastStringWrapper(L"type").Get(), WinToastStringWrapper(L"text").Get());
-                hr = toastElement->SetAttribute(WinToastStringWrapper(L"placeHolderContent").Get(), WinToastStringWrapper(L"...").Get());
+                hr = toastElement->SetAttribute(WinToastStringWrapper(L"placeHolderContent").Get(), WinToastStringWrapper(inputPlaceholder).Get());
             }
         }
     }
 
-    ComPtr<IXmlNodeList> nodeList2;
-    hr = xml->GetElementsByTagName(WinToastStringWrapper(L"action").Get(), &nodeList2);
-    if (SUCCEEDED(hr))
-    {
-        ComPtr<IXmlNode> actionNode;
-        hr = nodeList2->Item(0, &actionNode);
+    if (!inputButtonText.empty()) {
+        std::vector<std::wstring> attrbs2;
+        attrbs2.push_back(L"content");
+        attrbs2.push_back(L"arguments");
+
+        Util::createElement(xml, L"actions", L"action",attrbs2);
+
+        ComPtr<IXmlNodeList> nodeList2;
+        hr = xml->GetElementsByTagName(WinToastStringWrapper(L"action").Get(), &nodeList2);
         if (SUCCEEDED(hr))
         {
-            ComPtr<IXmlElement> actionElement;
-            hr = actionNode.As(&actionElement);
-            if(SUCCEEDED(hr)){
-                actionElement->SetAttribute(WinToastStringWrapper(L"content").Get(), WinToastStringWrapper(L"Reply").Get());
-                actionElement->SetAttribute(WinToastStringWrapper(L"arguments").Get(), WinToastStringWrapper(L"action=reply").Get());
-                actionElement->SetAttribute(WinToastStringWrapper(L"hint-inputId").Get(), WinToastStringWrapper(L"textBox").Get());
+            ComPtr<IXmlNode> actionNode;
+            hr = nodeList2->Item(0, &actionNode);
+            if (SUCCEEDED(hr))
+            {
+                ComPtr<IXmlElement> actionElement;
+                hr = actionNode.As(&actionElement);
+                if(SUCCEEDED(hr)){
+                    actionElement->SetAttribute(WinToastStringWrapper(L"content").Get(), WinToastStringWrapper(inputButtonText).Get());
+                    actionElement->SetAttribute(WinToastStringWrapper(L"arguments").Get(), WinToastStringWrapper(L"action=reply").Get());
+                    actionElement->SetAttribute(WinToastStringWrapper(L"hint-inputId").Get(), WinToastStringWrapper(L"textBox").Get());
+                }
             }
         }
     }
@@ -1090,7 +1092,7 @@ HRESULT WinToast::setImageFieldHelper(_In_ IXmlDocument* xml, _In_ std::wstring 
     HRESULT hr                  = StringCchCatW(imagePath, MAX_PATH, path.c_str());
     if (SUCCEEDED(hr)) {
         ComPtr<IXmlNodeList> nodeList;
-        HRESULT hr = xml->GetElementsByTagName(WinToastStringWrapper(L"image").Get(), &nodeList);
+        hr = xml->GetElementsByTagName(WinToastStringWrapper(L"image").Get(), &nodeList);
         if (SUCCEEDED(hr)) {
             ComPtr<IXmlNode> node;
             hr = nodeList->Item(0, &node);
@@ -1396,9 +1398,16 @@ void WinToastTemplate::addAction(_In_ std::wstring const& label) {
     _actions.push_back(label);
 }
 
-void WinToastTemplate::addInput()
-{
+void WinToastTemplate::addInput() {
     _hasInput = true;
+}
+
+void WinToastTemplate::setInputPlaceholder(_In_ std::wstring const& placeholder) {
+    _inputPlaceholder = placeholder;
+}
+
+void WinToastTemplate::setInputButtonText(_In_ std::wstring const& buttonText) {
+    _inputButtonText = buttonText;
 }
 
 std::size_t WinToastTemplate::textFieldsCount() const {
@@ -1480,6 +1489,14 @@ bool WinToastTemplate::isCropHintCircle() const {
     return _cropHint == CropHint::Circle;
 }
 
-bool WinToastTemplate::isInput() const{
+bool WinToastTemplate::hasInput() const {
     return _hasInput;
+}
+
+std::wstring const& WinToastTemplate::inputPlaceholder() const {
+    return _inputPlaceholder;
+}
+
+std::wstring const& WinToastTemplate::inputButtonText() const {
+    return _inputButtonText;
 }

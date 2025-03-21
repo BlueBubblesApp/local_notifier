@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:local_notifier/src/local_notification.dart';
 import 'package:local_notifier/src/local_notification_close_reason.dart';
-import 'package:local_notifier/src/local_notification_duration.dart';
 import 'package:local_notifier/src/local_notification_listener.dart';
 import 'package:local_notifier/src/shortcut_policy.dart';
 
@@ -55,6 +54,9 @@ class LocalNotifier {
           localNotification!,
           actionIndex,
         );
+      } else if (call.method == 'onLocalNotificationInput') {
+        String input = call.arguments['input'] as String;
+        listener.onLocalNotificationInput(localNotification!, input);
       } else {
         throw UnimplementedError();
       }
