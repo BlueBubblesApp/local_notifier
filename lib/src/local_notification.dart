@@ -22,7 +22,6 @@ class LocalNotification with LocalNotificationListener {
     this.imagePath,
     this.systemSound,
     this.soundOption = LocalNotificationSoundOption.defaultOption,
-    this.silent = false,
     this.duration = LocalNotificationDuration.system,
     this.actions,
     this.hasInput = false,
@@ -76,7 +75,6 @@ class LocalNotification with LocalNotificationListener {
         (e) => e.toString() == json['soundOption'],
         orElse: () => LocalNotificationSoundOption.defaultOption,
       ),
-      silent: json['silent'] as bool,
       duration: LocalNotificationDuration.values.firstWhere(
         (e) => e.toString() == json['duration'],
         orElse: () => LocalNotificationDuration.system,
@@ -114,9 +112,6 @@ class LocalNotification with LocalNotificationListener {
   /// Representing the audio option of the notification (Windows only).
   LocalNotificationSoundOption soundOption;
 
-  /// Representing whether the notification is silent (Windows only).
-  bool silent;
-
   /// Representing the duration of the notification (Windows only).
   LocalNotificationDuration duration;
 
@@ -149,7 +144,6 @@ class LocalNotification with LocalNotificationListener {
       'imagePath': imagePath ?? '',
       'systemSound': systemSound?.toString() ?? '',
       'soundOption': soundOption.toString(),
-      'silent': silent,
       'duration': duration.toString(),
       'actions': (actions ?? []).map((e) => e.toJson()).toList(),
       'hasInput': hasInput,
