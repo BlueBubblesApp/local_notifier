@@ -19,6 +19,7 @@ class LocalNotification with LocalNotificationListener {
     this.subtitle,
     this.body,
     this.body2,
+    this.attributionText,
     this.imagePath,
     this.systemSound,
     this.soundOption = LocalNotificationSoundOption.defaultOption,
@@ -66,6 +67,7 @@ class LocalNotification with LocalNotificationListener {
       subtitle: json['subtitle'] as String?,
       body: json['body'] as String?,
       body2: json['body2'] as String?,
+      attributionText: json['attributionText'] as String?,
       imagePath: json['imagePath'] as String?,
       systemSound: LocalNotificationSound.values.firstWhere(
         (e) => e.toString() == json['systemSound'],
@@ -102,6 +104,9 @@ class LocalNotification with LocalNotificationListener {
 
   /// Representing the third line of the notification (Windows only).
   String? body2;
+
+  /// Representing the attribution text of the notification (Windows only).
+  String? attributionText;
 
   /// Representing the image path of the notification (Windows only).
   String? imagePath;
@@ -141,6 +146,7 @@ class LocalNotification with LocalNotificationListener {
       'subtitle': subtitle ?? '',
       'body': body ?? '',
       'body2': body2 ?? '',
+      'attributionText': attributionText ?? '',
       'imagePath': imagePath ?? '',
       'systemSound': systemSound?.toString() ?? '',
       'soundOption': soundOption.toString(),

@@ -198,6 +198,8 @@ void LocalNotifierPlugin::Notify(
       std::get<std::string>(args.at(flutter::EncodableValue("body")));
   std::string body2 =
       std::get<std::string>(args.at(flutter::EncodableValue("body2")));
+  std::string attributionText =
+      std::get<std::string>(args.at(flutter::EncodableValue("attributionText")));
   std::string imagePath =
       std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
   std::string systemSound =
@@ -240,6 +242,9 @@ void LocalNotifierPlugin::Notify(
   }
   if (body2.size() != 0) {
     toast.setThirdLine(converter.from_bytes(body2));
+  }
+  if (attributionText.size() != 0) {
+    toast.setAttributionText(converter.from_bytes(attributionText));
   }
   if (imagePath.size() != 0) {
     toast.setImagePath(converter.from_bytes(imagePath));
