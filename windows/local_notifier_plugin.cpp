@@ -202,6 +202,8 @@ void LocalNotifierPlugin::Notify(
       std::get<std::string>(args.at(flutter::EncodableValue("attributionText")));
   std::string imagePath =
       std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
+  std::string imageCropHint =
+      std::get<std::string>(args.at(flutter::EncodableValue("imageCropHint")));
   std::string systemSound =
       std::get<std::string>(args.at(flutter::EncodableValue("systemSound")));
   std::string soundOption =
@@ -247,7 +249,13 @@ void LocalNotifierPlugin::Notify(
     toast.setAttributionText(converter.from_bytes(attributionText));
   }
   if (imagePath.size() != 0) {
-    toast.setImagePath(converter.from_bytes(imagePath));
+    if (imageCropHint == "LocalNotificationImageCropHint.circle") {
+      toast.setImagePath(converter.from_bytes(imagePath),
+                        WinToastTemplate::CropHint::Circle);
+    } else {
+      toast.setImagePath(converter.from_bytes(imagePath),
+                        WinToastTemplate::CropHint::Square);
+    }
   }
   if (systemSound == "LocalNotificationSound.defaultSound") {
     toast.setAudioPath(WinToastTemplate::AudioSystemFile::DefaultSound);

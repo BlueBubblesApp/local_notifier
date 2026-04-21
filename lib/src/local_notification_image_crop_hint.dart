@@ -1,0 +1,4 @@
+enum LocalNotificationImageCropHint {
+  circle,
+  square,
+}

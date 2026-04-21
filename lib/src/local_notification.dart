@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:local_notifier/src/local_notification_action.dart';
 import 'package:local_notifier/src/local_notification_close_reason.dart';
 import 'package:local_notifier/src/local_notification_duration.dart';
+import 'package:local_notifier/src/local_notification_image_crop_hint.dart';
 import 'package:local_notifier/src/local_notification_listener.dart';
 import 'package:local_notifier/src/local_notification_sound.dart';
 import 'package:local_notifier/src/local_notification_sound_option.dart';
@@ -21,6 +22,7 @@ class LocalNotification with LocalNotificationListener {
     this.body2,
     this.attributionText,
     this.imagePath,
+    this.imageCropHint = LocalNotificationImageCropHint.circle,
     this.systemSound,
     this.soundOption = LocalNotificationSoundOption.defaultOption,
     this.duration = LocalNotificationDuration.system,
@@ -69,6 +71,10 @@ class LocalNotification with LocalNotificationListener {
       body2: json['body2'] as String?,
       attributionText: json['attributionText'] as String?,
       imagePath: json['imagePath'] as String?,
+      imageCropHint: LocalNotificationImageCropHint.values.firstWhere(
+        (e) => e.toString() == json['imageCropHint'],
+        orElse: () => LocalNotificationImageCropHint.circle,
+      ),
       systemSound: LocalNotificationSound.values.firstWhere(
         (e) => e.toString() == json['systemSound'],
         orElse: () => LocalNotificationSound.defaultSound,
@@ -111,6 +117,9 @@ class LocalNotification with LocalNotificationListener {
   /// Representing the image path of the notification (Windows only).
   String? imagePath;
 
+  /// Representing the image crop hint of the notification (Windows only).
+  LocalNotificationImageCropHint imageCropHint;
+
   /// Representing the system sound of the notification (Windows only).
   LocalNotificationSound? systemSound;
 
@@ -148,6 +157,7 @@ class LocalNotification with LocalNotificationListener {
       'body2': body2 ?? '',
       'attributionText': attributionText ?? '',
       'imagePath': imagePath ?? '',
+      'imageCropHint': imageCropHint.toString(),
       'systemSound': systemSound?.toString() ?? '',
       'soundOption': soundOption.toString(),
       'duration': duration.toString(),
